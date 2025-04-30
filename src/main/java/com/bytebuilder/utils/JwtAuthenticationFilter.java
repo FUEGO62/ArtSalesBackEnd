@@ -26,19 +26,48 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.jwtUtil = jwtUtil;
     }
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
+//    @Override
+//    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+//            throws ServletException, IOException {
+//
+//        String requestURI = request.getRequestURI();
+//
+//
+//        if (requestURI.equals("/user/signUp") || requestURI.equals("/user/viewGallery") || requestURI.equals("/user/logIn")||requestURI.equals("/user/viewBasedOnCategory")) {
+//            filterChain.doFilter(request, response);
+//            return;
+//        }
+//        String token = extractToken(request);
+//        if (token != null) {
+//            String email = jwtUtil.extractEmail(token);
+//            if (email != null) {
+//                UserDetails userDetails = new User(email, "", Collections.emptyList());
+//                UsernamePasswordAuthenticationToken auth =
+//                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+//                SecurityContextHolder.getContext().setAuthentication(auth);
+//            }
+//        }
+//        filterChain.doFilter(request, response);
+//    }
+@Override
+protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+        throws ServletException, IOException {
 
-        String requestURI = request.getRequestURI();
+    String requestURI = request.getRequestURI();
 
 
-        if (requestURI.equals("/user/signUp") || requestURI.equals("/user/viewGallery") || requestURI.equals("/user/logIn")||requestURI.equals("/user/viewBasedOnCategory")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-        String token = extractToken(request);
-        if (token != null) {
+    if (requestURI.equals("/user/signUp") ||
+            requestURI.equals("/user/viewGallery") ||
+            requestURI.equals("/user/logIn") ||
+            requestURI.equals("/user/viewBasedOnCategory")) {
+
+        filterChain.doFilter(request, response);
+        return;
+    }
+
+    String token = extractToken(request);
+    if (token != null) {
+        try {
             String email = jwtUtil.extractEmail(token);
             if (email != null) {
                 UserDetails userDetails = new User(email, "", Collections.emptyList());
@@ -46,9 +75,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
+        } catch (Exception e) {
+
+            SecurityContextHolder.clearContext();
         }
-        filterChain.doFilter(request, response);
     }
+
+    filterChain.doFilter(request, response);
+}
+
 
     private String extractToken(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
